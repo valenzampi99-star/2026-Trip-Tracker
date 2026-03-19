@@ -782,7 +782,7 @@
     badge.classList.toggle('hidden', count === 0);
   }
 
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyB6XGnR9mcrAwrzzeSfZPDqufOCJxg6vo4';
+  const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
 
   async function calculateKm(origin, destination) {
     try {
@@ -1099,6 +1099,64 @@
     toast('Trip updated ✓');
   }
 
+  // ─── Read URL Parameters from Shortcut ───────────────────────────────────
+  function checkUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const start = params.get('start');
+    const end = params.get('end');
+    const arrival = params.get('arrival');
+
+    if (!start || !end) return;
+
+    // Parse start data — format is "| address | departure time"
+    const parts = start.split('|').map(p => p.trim()).filter(Boolean);
+    const startAddress = parts[0] || 'Unknown';
+    const departureTime = parts[1] || '';
+
+    // Check if this trip already exists (avoid duplicates)
+    const isDuplicate = trips.some(t =>
+      t.startAddress === startAddress &&
+      t.arrivalTime === arrival
+    );
+
+    if (isDuplicate) return;
+
+    const newTrip = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      startAddress: startAddress,
+      endAddress: end,
+      departureTime: departureTime,
+      arrivalTime: arrival || '',
+      km: null,
+      status: 'unreviewed',
+      type: null
+    };
+
+    // Check if end address matches a student with auto-business on
+    const student = matchStudent(end);
+    if (student && student.autoBusiness) {
+      newTrip.status = 'reviewed';
+      newTrip.type = 'business';
+      trips.unshift(newTrip);
+      saveTrips();
+      // Calculate km and sync to Notion in background
+      calculateKm(startAddress, end).then(km => {
+        newTrip.km = km;
+        saveTrips();
+        syncToNotion(newTrip, 'business');
+      });
+      toast(`Auto-logged as Business — ${student.name} ✓`);
+    } else {
+      trips.unshift(newTrip);
+      saveTrips();
+    }
+
+    // Clear URL params without reloading
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  checkUrlParams();
   renderInbox();
   updateBadge();
 </script>
