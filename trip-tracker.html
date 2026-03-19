@@ -782,15 +782,39 @@
     badge.classList.toggle('hidden', count === 0);
   }
 
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyB6XGnR9mcrAwrzzeSfZPDqufOCJxg6vo4';
+  const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
+
+  // Load Google Maps JavaScript API dynamically
+  function loadGoogleMapsAPI() {
+    return new Promise((resolve) => {
+      if (window.google && window.google.maps) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geometry`;
+      script.onload = resolve;
+      document.head.appendChild(script);
+    });
+  }
 
   async function calculateKm(origin, destination) {
     try {
-      const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&mode=driving&units=metric&key=${GOOGLE_MAPS_API_KEY}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      const meters = data.rows[0].elements[0].distance.value;
-      return +(meters / 1000).toFixed(1);
+      await loadGoogleMapsAPI();
+      return new Promise((resolve) => {
+        const service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+          origins: [origin],
+          destinations: [destination],
+          travelMode: google.maps.TravelMode.DRIVING,
+          unitSystem: google.maps.UnitSystem.METRIC
+        }, (response, status) => {
+          if (status === 'OK') {
+            const meters = response.rows[0].elements[0].distance.value;
+            resolve(+(meters / 1000).toFixed(1));
+          } else {
+            console.log('Distance Matrix error:', status);
+            resolve(null);
+          }
+        });
+      });
     } catch (e) {
       console.log('Distance calculation error:', e);
       return null;
