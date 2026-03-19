@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Trip Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --business: #D0F8AB;
+    --personal: #FFD6AE;
+    --cream: #FDF0D5;
+    --navy: #003049;
+    --steel: #669BBC;
+    --red: #C1121F;
+    --bg: #FDF0D5;
+    --card: #FFFFFF;
+    --text: #003049;
+    --text-soft: #669BBC;
+    --border: #e8dfc8;
+    --business-dark: #4a8a1f;
+    --personal-dark: #b86e1a;
+    --shadow: 0 2px 12px rgba(0,48,73,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,48,73,0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 90px;
+  }
+
+  .header {
+    padding: 48px 22px 16px;
+    background: var(--navy);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top { display: flex; justify-content: space-between; align-items: flex-end; }
+
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .header h1 span { color: #ffffff; }
+
+  .badge {
+    background: var(--red);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    letter-spacing: 0.4px;
+    line-height: 1;
+    margin-bottom: 2px;
+    box-shadow: 0 0 0 4px rgba(193,18,31,0.25), 0 0 0 8px rgba(193,18,31,0.1);
+    animation: pulse 2s ease-in-out infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+
+  .badge-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .badge-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(193,18,31,0.25), 0 0 0 8px rgba(193,18,31,0.1); }
+    50% { box-shadow: 0 0 0 6px rgba(193,18,31,0.3), 0 0 0 12px rgba(193,18,31,0.12); }
+  }
+
+  .badge.hidden { display: none; }
+
+  .nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background: var(--navy);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-btn {
+    flex: 1;
+    padding: 10px 4px 14px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-btn.active { color: var(--business); }
+  .nav-btn svg { width: 20px; height: 20px; }
+
+  .tab { display: none; padding: 16px 14px; }
+  .tab.active { display: block; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--steel);
+    margin: 18px 0 8px;
+    padding-left: 2px;
+  }
+
+  .section-label:first-child { margin-top: 0; }
+
+  /* Trip Cards */
+  .trip-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    animation: slideIn 0.25s ease;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .trip-card.categorized { opacity: 0; transform: scale(0.97) translateY(-4px); }
+
+  .trip-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+  .trip-date {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    color: var(--steel);
+  }
+
+  .trip-km {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    color: var(--navy);
+  }
+
+  .trip-km span {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--steel);
+    font-weight: 400;
+  }
+
+  .trip-route { margin-bottom: 12px; }
+
+  .route-point { display: flex; align-items: flex-start; gap: 10px; padding: 3px 0; }
+
+  .route-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .route-dot.start { background: var(--navy); }
+  .route-dot.end { background: var(--red); }
+
+  .route-line { width: 1.5px; height: 10px; background: var(--border); margin-left: 3px; }
+
+  .route-label { font-size: 10px; color: var(--steel); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .route-address { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
+
+  .student-tag {
+    display: inline-block;
+    background: var(--business);
+    color: var(--business-dark);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 3px;
+    letter-spacing: 0.3px;
+  }
+
+  .trip-times { font-size: 11px; color: var(--steel); margin-bottom: 12px; display: flex; gap: 10px; font-weight: 500; }
+
+  .trip-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .action-btn {
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    letter-spacing: 0.3px;
+  }
+
+  .action-btn:active { transform: scale(0.96); }
+  .btn-business { background: var(--business); color: var(--business-dark); border: 2px solid #8fce65; box-shadow: 0 2px 0 #6aad30; }
+  .btn-personal { background: var(--personal); color: var(--personal-dark); border: 2px solid #e8a96b; box-shadow: 0 2px 0 #c47820; }
+
+  .empty { text-align: center; padding: 50px 20px; }
+  .empty-icon { font-size: 44px; margin-bottom: 14px; }
+
+  .empty h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+
+  .empty p { font-size: 14px; color: var(--steel); line-height: 1.5; }
+
+  /* Log filters */
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .filter-btn {
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    background: var(--card);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--steel);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  .filter-btn.active { background: var(--navy); color: var(--cream); border-color: var(--navy); }
+
+  .period-select {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    margin-bottom: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23669BBC'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 10px;
+  }
+
+  /* Total bar */
+  .total-bar {
+    background: var(--navy);
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .total-bar .label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; opacity: 0.6; margin-bottom: 4px; }
+  .total-bar .value { font-family: 'Syne', sans-serif; font-size: 30px; color: var(--business); }
+  .total-bar .unit { font-size: 13px; opacity: 0.6; font-family: 'Inter', sans-serif; }
+  .total-bar .trips-count { font-family: 'Syne', sans-serif; font-size: 22px; color: var(--steel); }
+
+  /* Log cards */
+  .log-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .log-left { flex: 1; min-width: 0; }
+  .log-date { font-size: 10px; color: var(--steel); font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 3px; }
+  .log-route { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
+  .log-km { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--navy); }
+
+  .log-type { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.4px; text-transform: uppercase; }
+  .log-type.business { background: var(--business); color: var(--business-dark); }
+  .log-type.personal { background: var(--personal); color: var(--personal-dark); }
+
+  /* Odometer */
+  .odo-card, .discrepancy-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+  }
+
+  .odo-card h3, .discrepancy-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    color: var(--navy);
+    margin-bottom: 14px;
+  }
+
+  .odo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+
+  .odo-field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: var(--steel);
+    margin-bottom: 5px;
+  }
+
+  .odo-field input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    background: var(--bg);
+    color: var(--navy);
+    -webkit-appearance: none;
+  }
+
+  .odo-field input:focus { outline: none; border-color: var(--navy); }
+
+  .btn-row { display: flex; gap: 8px; }
+
+  .save-btn {
+    flex: 1;
+    padding: 12px;
+    background: var(--navy);
+    color: var(--cream);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+
+  .save-btn:active { opacity: 0.8; }
+
+  .reset-btn {
+    padding: 12px 16px;
+    background: var(--bg);
+    color: var(--steel);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .reset-btn:active { background: #ffdede; color: var(--red); border-color: var(--red); }
+
+  .discrepancy-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .discrepancy-row:last-of-type { border-bottom: none; }
+  .discrepancy-row .label { color: var(--steel); font-size: 13px; font-weight: 500; }
+  .discrepancy-row .value { font-weight: 700; font-size: 15px; color: var(--navy); }
+
+  .status-ok { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--business); border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--business-dark); margin-top: 12px; }
+  .status-warn { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--personal); border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--personal-dark); margin-top: 12px; }
+
+  /* Students */
+  .student-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .student-info { flex: 1; min-width: 0; }
+  .student-name { font-weight: 700; font-size: 15px; color: var(--navy); margin-bottom: 2px; }
+  .student-address { font-size: 12px; color: var(--steel); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .auto-col { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+  .auto-col span { font-size: 9px; font-weight: 700; color: var(--steel); letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .toggle { width: 36px; height: 20px; background: var(--border); border-radius: 20px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+  .toggle.on { background: var(--business-dark); }
+  .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.on::after { transform: translateX(16px); }
+
+  .delete-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--bg); color: var(--steel); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; transition: all 0.2s; flex-shrink: 0; }
+  .delete-btn:active { background: #ffdede; color: var(--red); }
+
+  .add-form {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    border: 1.5px dashed var(--steel);
+  }
+
+  .add-form h3 { font-family: 'Syne', sans-serif; font-size: 16px; color: var(--navy); margin-bottom: 12px; }
+
+  .form-field { margin-bottom: 9px; }
+
+  .form-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: var(--steel); margin-bottom: 4px; }
+
+  .form-field input {
+    width: 100%;
+    padding: 10px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--navy);
+    -webkit-appearance: none;
+  }
+
+  .form-field input:focus { outline: none; border-color: var(--navy); }
+
+  .add-btn { width: 100%; padding: 12px; background: var(--navy); color: var(--cream); border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; letter-spacing: 0.3px; }
+  .add-btn:active { opacity: 0.8; }
+
+  .config-card { background: var(--card); border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: var(--shadow); border: 1.5px solid var(--border); }
+  .config-card h3 { font-family: 'Syne', sans-serif; font-size: 16px; color: var(--navy); margin-bottom: 6px; }
+  .config-card p { font-size: 12px; color: var(--steel); margin-bottom: 12px; line-height: 1.5; }
+
+  .notion-status { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; margin-top: 10px; color: var(--steel); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot.green { background: var(--business-dark); }
+  .dot.grey { background: var(--steel); }
+
+  .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--navy); color: var(--cream); padding: 10px 20px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.3s ease; pointer-events: none; white-space: nowrap; z-index: 200; box-shadow: var(--shadow-lg); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Edit Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,48,73,0.5);
+    z-index: 300;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--card);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 18px 40px;
+    width: 100%;
+    max-width: 480px;
+    transform: translateY(40px);
+    transition: transform 0.25s ease;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    margin: 0 auto 20px;
+  }
+
+  .modal h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 18px;
+  }
+
+  .modal-type-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .modal-type-btn {
+    padding: 14px;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 2px solid transparent;
+    opacity: 0.5;
+  }
+
+  .modal-type-btn.selected { opacity: 1; transform: scale(1.02); }
+  .modal-type-btn.business { background: var(--business); color: var(--business-dark); border-color: #8fce65; }
+  .modal-type-btn.personal { background: var(--personal); color: var(--personal-dark); border-color: #e8a96b; }
+
+  .modal-field { margin-bottom: 12px; }
+  .modal-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: var(--steel); margin-bottom: 5px; }
+  .modal-field input {
+    width: 100%;
+    padding: 10px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--navy);
+    -webkit-appearance: none;
+  }
+  .modal-field input:focus { outline: none; border-color: var(--navy); }
+
+  .modal-save {
+    width: 100%;
+    padding: 14px;
+    background: var(--navy);
+    color: var(--cream);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .modal-save:active { opacity: 0.8; }
+
+  .edit-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--steel);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 8px;
+    transition: all 0.15s;
+  }
+
+  .edit-btn:active { background: var(--navy); color: var(--cream); border-color: var(--navy); }
+  .edit-btn svg { width: 13px; height: 13px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>TRIP <span>TRACKER</span></h1>
+    <div class="badge hidden" id="inbox-badge"><span class="badge-num">0</span><span class="badge-label">pending</span></div>
+  </div>
+</div>
+
+<div id="tab-inbox" class="tab active"><div id="inbox-content"></div></div>
+
+<div id="tab-log" class="tab">
+  <div id="total-bar-container"></div>
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('year', this)">Year</button>
+    <button class="filter-btn" onclick="setFilter('month', this)">Month</button>
+    <button class="filter-btn" onclick="setFilter('week', this)">Week</button>
+    <button class="filter-btn" onclick="setFilter('day', this)">Day</button>
+  </div>
+  <div id="period-picker"></div>
+  <div id="log-content"></div>
+</div>
+
+<div id="tab-odometer" class="tab">
+  <div class="section-label">Today's Reading</div>
+  <div class="odo-card">
+    <h3>Odometer</h3>
+    <div class="odo-grid">
+      <div class="odo-field"><label>Start of Day (km)</label><input type="number" id="odo-start" placeholder="45230"></div>
+      <div class="odo-field"><label>End of Day (km)</label><input type="number" id="odo-end" placeholder="45298"></div>
+    </div>
+    <div class="btn-row">
+      <button class="save-btn" onclick="saveOdometer()">Save Reading</button>
+      <button class="reset-btn" onclick="resetOdometer()">Reset Day</button>
+    </div>
+  </div>
+  <div class="section-label">Verification</div>
+  <div class="discrepancy-card">
+    <h3>km Check</h3>
+    <div class="discrepancy-row"><span class="label">Odometer difference</span><span class="value" id="odo-diff">— km</span></div>
+    <div class="discrepancy-row"><span class="label">App logged today</span><span class="value" id="app-logged">— km</span></div>
+    <div class="discrepancy-row"><span class="label">Discrepancy</span><span class="value" id="discrepancy-val">— km</span></div>
+    <div id="discrepancy-status"></div>
+  </div>
+</div>
+
+<div id="tab-students" class="tab">
+  <div class="add-form">
+    <h3>Add Student</h3>
+    <div class="form-field"><label>Student Name</label><input type="text" id="new-name" placeholder="e.g. Emma"></div>
+    <div class="form-field"><label>Home Address</label><input type="text" id="new-address" placeholder="e.g. 123 Main St, Toronto"></div>
+    <button class="add-btn" onclick="addStudent()">Add Student</button>
+  </div>
+  <div class="section-label">Your Students</div>
+  <div id="students-list"></div>
+  <div class="section-label" style="margin-top:22px">Notion Settings</div>
+  <div class="config-card">
+    <h3>Notion Integration</h3>
+    <p>Enter your Notion API token and Database ID to sync trips automatically.</p>
+    <div class="form-field"><label>API Token</label><input type="password" id="notion-token" placeholder="secret_..."></div>
+    <div class="form-field"><label>Database ID</label><input type="text" id="notion-db" placeholder="3261f40f9fcc8009ac25fd6911a0d420"></div>
+    <button class="add-btn" onclick="saveNotionConfig()">Save Settings</button>
+    <div class="notion-status" id="notion-status"><div class="dot grey"></div><span>Not configured</span></div>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="switchTab('inbox', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Inbox
+  </button>
+  <button class="nav-btn" onclick="switchTab('log', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    Log
+  </button>
+  <button class="nav-btn" onclick="switchTab('odometer', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    Odometer
+  </button>
+  <button class="nav-btn" onclick="switchTab('students', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    Students
+  </button>
+</nav>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>Edit Trip</h3>
+    <div class="modal-type-row">
+      <button class="modal-type-btn business" id="modal-btn-business" onclick="selectModalType('business')">💼 Business</button>
+      <button class="modal-type-btn personal" id="modal-btn-personal" onclick="selectModalType('personal')">🏠 Personal</button>
+    </div>
+    <div class="modal-field"><label>Start Address</label><input type="text" id="modal-start"></div>
+    <div class="modal-field"><label>End Address</label><input type="text" id="modal-end"></div>
+    <div class="modal-field"><label>Kilometers</label><input type="number" id="modal-km" step="0.1"></div>
+    <button class="modal-save" onclick="saveEdit()">Save Changes</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let trips = JSON.parse(localStorage.getItem('trips') || '[]');
+  let students = JSON.parse(localStorage.getItem('students') || '[]');
+  let odometer = JSON.parse(localStorage.getItem('odometer') || '{}');
+  let notionConfig = JSON.parse(localStorage.getItem('notionConfig') || '{}');
+  let currentFilter = 'all';
+  let currentPeriod = null;
+
+  if (trips.length === 0) {
+    const now = new Date();
+    trips = [
+      { id: 1, date: now.toISOString(), startAddress: '456 Gym Road, Toronto, ON', endAddress: '123 Main St, Toronto, ON', departureTime: '09:15', arrivalTime: '09:38', km: null, status: 'unreviewed', type: null },
+      { id: 2, date: new Date(now - 86400000).toISOString(), startAddress: '789 Home Ave, Toronto, ON', endAddress: '321 Oak Blvd, Toronto, ON', departureTime: '14:00', arrivalTime: '14:22', km: 12.4, status: 'reviewed', type: 'business' },
+      { id: 3, date: new Date(now - 86400000).toISOString(), startAddress: '321 Oak Blvd, Toronto, ON', endAddress: '789 Home Ave, Toronto, ON', departureTime: '15:30', arrivalTime: '15:51', km: 12.1, status: 'reviewed', type: 'personal' },
+      { id: 4, date: new Date(now - 7*86400000).toISOString(), startAddress: '789 Home Ave, Toronto, ON', endAddress: '123 Main St, Toronto, ON', departureTime: '10:00', arrivalTime: '10:18', km: 8.6, status: 'reviewed', type: 'business' },
+    ];
+    saveTrips();
+  }
+
+  if (students.length === 0) {
+    students = [
+      { id: 1, name: 'Emma', address: '123 Main St, Toronto, ON', autoBusiness: true },
+      { id: 2, name: 'Luca', address: '321 Oak Blvd, Toronto, ON', autoBusiness: true },
+    ];
+    saveStudents();
+  }
+
+  function saveTrips() { localStorage.setItem('trips', JSON.stringify(trips)); }
+  function saveStudents() { localStorage.setItem('students', JSON.stringify(students)); }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+    if (name === 'inbox') renderInbox();
+    if (name === 'log') renderLog();
+    if (name === 'odometer') renderOdometer();
+    if (name === 'students') renderStudents();
+  }
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+  }
+
+  function shortAddress(addr) { return addr.split(',')[0]; }
+
+  function matchStudent(address) {
+    return students.find(s => s.address.toLowerCase().trim() === address.toLowerCase().trim());
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function updateBadge() {
+    const count = trips.filter(t => t.status === 'unreviewed').length;
+    const badge = document.getElementById('inbox-badge');
+    badge.querySelector('.badge-num').textContent = count;
+    badge.classList.toggle('hidden', count === 0);
+  }
+
+  async function calculateKm(origin, destination) {
+    return new Promise(resolve => setTimeout(() => resolve(+(Math.random() * 15 + 3).toFixed(1)), 700));
+  }
+
+  async function syncToNotion(trip, type) {
+    if (!notionConfig.token || !notionConfig.dbId) return;
+    try {
+      await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${notionConfig.token}`, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parent: { database_id: notionConfig.dbId },
+          properties: {
+            Trip: { title: [{ text: { content: `Trip — ${formatDate(trip.date)}` } }] },
+            Date: { date: { start: new Date(trip.date).toISOString().split('T')[0] } },
+            'Start Location': { rich_text: [{ text: { content: trip.startAddress } }] },
+            'End Location': { rich_text: [{ text: { content: trip.endAddress } }] },
+            Kilometers: { number: parseFloat(trip.km) || 0 },
+            'Departure Time': { rich_text: [{ text: { content: trip.departureTime || '' } }] },
+            'Arrival Time': { rich_text: [{ text: { content: trip.arrivalTime || '' } }] },
+            Status: { select: { name: type === 'business' ? 'Business' : 'Personal' } }
+          }
+        })
+      });
+    } catch (e) { console.log('Notion sync error:', e); }
+  }
+
+  function renderInbox() {
+    updateBadge();
+    const pending = trips.filter(t => t.status === 'unreviewed');
+    const el = document.getElementById('inbox-content');
+
+    if (pending.length === 0) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">✦</div><h3>All Caught Up</h3><p>No trips waiting for review.<br>New trips appear here after each drive.</p></div>`;
+      return;
+    }
+
+    el.innerHTML = `<div class="section-label">${pending.length} trip${pending.length > 1 ? 's' : ''} to review</div>`;
+
+    pending.forEach(trip => {
+      const student = matchStudent(trip.endAddress);
+      const card = document.createElement('div');
+      card.className = 'trip-card';
+      card.id = 'card-' + trip.id;
+      card.innerHTML = `
+        <div class="trip-meta">
+          <span class="trip-date">${formatDate(trip.date)}</span>
+          <span class="trip-km" id="km-${trip.id}">${trip.km ? trip.km + '<span> km</span>' : '<span style="font-size:12px;font-family:Work Sans,sans-serif;color:var(--steel)">Calculating…</span>'}</span>
+        </div>
+        <div class="trip-route">
+          <div class="route-point"><div class="route-dot start"></div><div><div class="route-label">From</div><div class="route-address">${shortAddress(trip.startAddress)}</div></div></div>
+          <div class="route-line"></div>
+          <div class="route-point"><div class="route-dot end"></div><div><div class="route-label">To</div><div class="route-address">${shortAddress(trip.endAddress)}</div>${student ? `<span class="student-tag">📚 ${student.name}</span>` : ''}</div></div>
+        </div>
+        <div class="trip-times"><span>🕐 ${trip.departureTime || '—'}</span><span>→</span><span>${trip.arrivalTime || '—'}</span></div>
+        <div class="trip-actions">
+          <button class="action-btn btn-business" onclick="categorize(${trip.id}, 'business')">💼 Business</button>
+          <button class="action-btn btn-personal" onclick="categorize(${trip.id}, 'personal')">🏠 Personal</button>
+        </div>`;
+      el.appendChild(card);
+
+      if (!trip.km) {
+        calculateKm(trip.startAddress, trip.endAddress).then(km => {
+          trip.km = km; saveTrips();
+          const kmEl = document.getElementById('km-' + trip.id);
+          if (kmEl) kmEl.innerHTML = km + '<span> km</span>';
+        });
+      }
+    });
+  }
+
+  async function categorize(id, type) {
+    const trip = trips.find(t => t.id === id);
+    if (!trip) return;
+    trip.status = 'reviewed';
+    trip.type = type;
+    saveTrips();
+    const card = document.getElementById('card-' + id);
+    if (card) { card.classList.add('categorized'); setTimeout(() => card.remove(), 300); }
+    await syncToNotion(trip, type);
+    toast(type === 'business' ? '💼 Logged as Business' : '🏠 Logged as Personal');
+    updateBadge();
+    setTimeout(() => { if (trips.filter(t => t.status === 'unreviewed').length === 0) renderInbox(); }, 350);
+  }
+
+  function setFilter(filter, btn) {
+    currentFilter = filter;
+    currentPeriod = null;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderPeriodPicker();
+    renderLog();
+  }
+
+  function getWeekKey(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const mon = new Date(d.setDate(diff));
+    return mon.toISOString().split('T')[0];
+  }
+
+  function renderPeriodPicker() {
+    const el = document.getElementById('period-picker');
+    if (currentFilter === 'all') { el.innerHTML = ''; return; }
+    const reviewed = trips.filter(t => t.status === 'reviewed');
+    const options = new Map();
+    reviewed.forEach(t => {
+      const d = new Date(t.date);
+      let key, label;
+      if (currentFilter === 'year') { key = d.getFullYear().toString(); label = key; }
+      else if (currentFilter === 'month') { key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; label = d.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' }); }
+      else if (currentFilter === 'week') { key = getWeekKey(t.date); label = `Week of ${new Date(key).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}`; }
+      else if (currentFilter === 'day') { key = d.toISOString().split('T')[0]; label = d.toLocaleDateString('en-CA', { weekday: 'long', month: 'short', day: 'numeric' }); }
+      if (!options.has(key)) options.set(key, label);
+    });
+    if (options.size === 0) { el.innerHTML = ''; return; }
+    const sorted = [...options.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+    if (!currentPeriod) currentPeriod = sorted[0][0];
+    el.innerHTML = `<select class="period-select" onchange="selectPeriod(this.value)">${sorted.map(([k,l]) => `<option value="${k}"${k===currentPeriod?' selected':''}>${l}</option>`).join('')}</select>`;
+  }
+
+  function selectPeriod(val) { currentPeriod = val; renderLog(); }
+
+  function tripMatchesFilter(trip) {
+    if (currentFilter === 'all') return true;
+    const d = new Date(trip.date);
+    if (currentFilter === 'year') return d.getFullYear().toString() === currentPeriod;
+    if (currentFilter === 'month') return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === currentPeriod;
+    if (currentFilter === 'week') return getWeekKey(trip.date) === currentPeriod;
+    if (currentFilter === 'day') return d.toISOString().split('T')[0] === currentPeriod;
+    return true;
+  }
+
+  function renderLog() {
+    const reviewed = trips.filter(t => t.status === 'reviewed' && tripMatchesFilter(t)).sort((a, b) => new Date(b.date) - new Date(a.date));
+    const businessTrips = reviewed.filter(t => t.type === 'business');
+    const totalKm = businessTrips.reduce((sum, t) => sum + (t.km || 0), 0);
+
+    document.getElementById('total-bar-container').innerHTML = `
+      <div class="total-bar">
+        <div><div class="label">Business KM</div><div class="value">${totalKm.toFixed(1)} <span class="unit">km</span></div></div>
+        <div style="text-align:right"><div class="label">Trips</div><div class="trips-count">${businessTrips.length}</div></div>
+      </div>`;
+
+    const logEl = document.getElementById('log-content');
+    if (reviewed.length === 0) { logEl.innerHTML = `<div class="empty" style="padding:30px 0"><div class="empty-icon">📋</div><h3>No Trips</h3><p>No trips found for this period.</p></div>`; return; }
+
+    logEl.innerHTML = reviewed.map(t => {
+      const student = matchStudent(t.endAddress);
+      return `<div class="log-card">
+        <div class="log-left"><div class="log-date">${formatDate(t.date)}</div><div class="log-route">${shortAddress(t.startAddress)} → ${student ? student.name : shortAddress(t.endAddress)}</div></div>
+        <div class="log-right"><div class="log-km">${t.km ? t.km.toFixed(1) : '—'}</div><span class="log-type ${t.type}">${t.type}</span></div>
+        <button class="edit-btn" onclick="openEdit(${t.id})" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="edit-btn" onclick="sendToInbox(${t.id})" title="Move to Inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></button>
+      </div>`;
+    }).join('');
+  }
+
+  function saveOdometer() {
+    const start = parseFloat(document.getElementById('odo-start').value);
+    const end = parseFloat(document.getElementById('odo-end').value);
+    if (isNaN(start) || isNaN(end)) { toast('Please enter both readings'); return; }
+    const today = new Date().toDateString();
+    odometer[today] = { start, end };
+    localStorage.setItem('odometer', JSON.stringify(odometer));
+    renderOdometer();
+    toast('Odometer saved ✓');
+  }
+
+  function resetOdometer() {
+    const today = new Date().toDateString();
+    delete odometer[today];
+    localStorage.setItem('odometer', JSON.stringify(odometer));
+    document.getElementById('odo-start').value = '';
+    document.getElementById('odo-end').value = '';
+    renderOdometer();
+    toast('Odometer reset for today');
+  }
+
+  function renderOdometer() {
+    const today = new Date().toDateString();
+    const reading = odometer[today];
+    if (reading) { document.getElementById('odo-start').value = reading.start; document.getElementById('odo-end').value = reading.end; }
+    const todayTrips = trips.filter(t => new Date(t.date).toDateString() === today && t.status === 'reviewed');
+    const appKm = todayTrips.reduce((sum, t) => sum + (t.km || 0), 0);
+    const odoKm = reading ? (reading.end - reading.start) : null;
+    const diff = odoKm !== null ? Math.abs(odoKm - appKm) : null;
+    document.getElementById('odo-diff').textContent = odoKm !== null ? odoKm.toFixed(1) + ' km' : '— km';
+    document.getElementById('app-logged').textContent = appKm.toFixed(1) + ' km';
+    document.getElementById('discrepancy-val').textContent = diff !== null ? diff.toFixed(1) + ' km' : '— km';
+    const statusEl = document.getElementById('discrepancy-status');
+    if (diff === null) statusEl.innerHTML = '';
+    else if (diff <= 2) statusEl.innerHTML = `<div class="status-ok">✓ Looking good — within 2 km</div>`;
+    else statusEl.innerHTML = `<div class="status-warn">⚠ ${diff.toFixed(1)} km discrepancy — check for missed trips</div>`;
+  }
+
+  function addStudent() {
+    const name = document.getElementById('new-name').value.trim();
+    const address = document.getElementById('new-address').value.trim();
+    if (!name || !address) { toast('Please fill in both fields'); return; }
+    students.push({ id: Date.now(), name, address, autoBusiness: true });
+    saveStudents();
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-address').value = '';
+    renderStudents();
+    toast(`${name} added ✓`);
+  }
+
+  function toggleAutoBusiness(id) {
+    const s = students.find(s => s.id === id);
+    if (s) { s.autoBusiness = !s.autoBusiness; saveStudents(); renderStudents(); }
+  }
+
+  function deleteStudent(id) {
+    students = students.filter(s => s.id !== id);
+    saveStudents();
+    renderStudents();
+    toast('Student removed');
+  }
+
+  function saveNotionConfig() {
+    const token = document.getElementById('notion-token').value.trim();
+    const dbId = document.getElementById('notion-db').value.trim();
+    if (!token || !dbId) { toast('Please fill in both fields'); return; }
+    notionConfig = { token, dbId };
+    localStorage.setItem('notionConfig', JSON.stringify(notionConfig));
+    renderNotionStatus();
+    toast('Notion settings saved ✓');
+  }
+
+  function renderNotionStatus() {
+    const el = document.getElementById('notion-status');
+    if (notionConfig.token && notionConfig.dbId) el.innerHTML = `<div class="dot green"></div><span>Connected</span>`;
+    else el.innerHTML = `<div class="dot grey"></div><span>Not configured</span>`;
+  }
+
+  function renderStudents() {
+    const el = document.getElementById('students-list');
+    if (students.length === 0) {
+      el.innerHTML = `<div class="empty" style="padding:30px 0"><div class="empty-icon">👤</div><h3>No Students Yet</h3><p>Add your students above.</p></div>`;
+    } else {
+      el.innerHTML = students.map(s => `
+        <div class="student-card">
+          <div class="student-info"><div class="student-name">${s.name}</div><div class="student-address">${s.address}</div></div>
+          <div class="auto-col"><span>Auto</span><div class="toggle ${s.autoBusiness ? 'on' : ''}" onclick="toggleAutoBusiness(${s.id})"></div></div>
+          <button class="delete-btn" onclick="deleteStudent(${s.id})">×</button>
+        </div>`).join('');
+    }
+    if (notionConfig.token) document.getElementById('notion-token').value = notionConfig.token;
+    if (notionConfig.dbId) document.getElementById('notion-db').value = notionConfig.dbId;
+    renderNotionStatus();
+  }
+
+  function sendToInbox(id) {
+    const trip = trips.find(t => t.id === id);
+    if (!trip) return;
+    trip.status = 'unreviewed';
+    trip.type = null;
+    saveTrips();
+    renderLog();
+    updateBadge();
+    toast('Trip moved to Inbox');
+  }
+
+  // ─── Edit Modal ───────────────────────────────────────────────────────────
+  let editingId = null;
+  let editingType = null;
+
+  function openEdit(id) {
+    const trip = trips.find(t => t.id === id);
+    if (!trip) return;
+    editingId = id;
+    editingType = trip.type;
+    document.getElementById('modal-start').value = trip.startAddress;
+    document.getElementById('modal-end').value = trip.endAddress;
+    document.getElementById('modal-km').value = trip.km || '';
+    selectModalType(trip.type);
+    document.getElementById('edit-modal').classList.add('open');
+  }
+
+  function selectModalType(type) {
+    editingType = type;
+    document.getElementById('modal-btn-business').classList.toggle('selected', type === 'business');
+    document.getElementById('modal-btn-personal').classList.toggle('selected', type === 'personal');
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('edit-modal')) {
+      document.getElementById('edit-modal').classList.remove('open');
+    }
+  }
+
+  function saveEdit() {
+    const trip = trips.find(t => t.id === editingId);
+    if (!trip) return;
+    trip.startAddress = document.getElementById('modal-start').value.trim() || trip.startAddress;
+    trip.endAddress = document.getElementById('modal-end').value.trim() || trip.endAddress;
+    trip.km = parseFloat(document.getElementById('modal-km').value) || trip.km;
+    trip.type = editingType;
+    saveTrips();
+    document.getElementById('edit-modal').classList.remove('open');
+    renderLog();
+    toast('Trip updated ✓');
+  }
+
+  renderInbox();
+  updateBadge();
+</script>
+</body>
+</html>
