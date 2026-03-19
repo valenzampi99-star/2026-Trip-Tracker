@@ -674,7 +674,7 @@
     <h3>Notion Integration</h3>
     <p>Enter your Notion API token and Database ID to sync trips automatically.</p>
     <div class="form-field"><label>API Token</label><input type="password" id="notion-token" placeholder="secret_..."></div>
-    <div class="form-field"><label>Database ID</label><input type="text" id="notion-db" placeholder="3261f40f9fcc802db640f5405ccdde17"></div>
+    <div class="form-field"><label>Database ID</label><input type="text" id="notion-db" placeholder="3261f40f9fcc8009ac25fd6911a0d420"></div>
     <button class="add-btn" onclick="saveNotionConfig()">Save Settings</button>
     <div class="notion-status" id="notion-status"><div class="dot grey"></div><span>Not configured</span></div>
   </div>
@@ -782,7 +782,7 @@
     badge.classList.toggle('hidden', count === 0);
   }
 
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyB6XGnR9mcrAwrzzeSfZPDqufOCJxg6vo4';
+  const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
 
   // Load Google Maps JavaScript API dynamically
   function loadGoogleMapsAPI() {
@@ -821,27 +821,25 @@
     }
   }
 
+  const MAKE_WEBHOOK_URL = 'https://hook.us2.make.com/45apshv7kx89urpsgx6j2vxvj0qrh3o1';
+
   async function syncToNotion(trip, type) {
-    if (!notionConfig.token || !notionConfig.dbId) return;
     try {
-      await fetch('https://api.notion.com/v1/pages', {
+      await fetch(MAKE_WEBHOOK_URL, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${notionConfig.token}`, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parent: { database_id: notionConfig.dbId },
-          properties: {
-            Trip: { title: [{ text: { content: `Trip — ${formatDate(trip.date)}` } }] },
-            Date: { date: { start: new Date(trip.date).toISOString().split('T')[0] } },
-            'Start Location': { rich_text: [{ text: { content: trip.startAddress } }] },
-            'End Location': { rich_text: [{ text: { content: trip.endAddress } }] },
-            Kilometers: { number: parseFloat(trip.km) || 0 },
-            'Departure Time': { rich_text: [{ text: { content: trip.departureTime || '' } }] },
-            'Arrival Time': { rich_text: [{ text: { content: trip.arrivalTime || '' } }] },
-            Status: { select: { name: type === 'business' ? 'Business' : 'Personal' } }
-          }
+          name: `Trip — ${formatDate(trip.date)}`,
+          date: new Date(trip.date).toISOString().split('T')[0],
+          startAddress: trip.startAddress,
+          endAddress: trip.endAddress,
+          km: parseFloat(trip.km) || 0,
+          departureTime: trip.departureTime || '',
+          arrivalTime: trip.arrivalTime || '',
+          type: type === 'business' ? 'Business' : 'Personal'
         })
       });
-    } catch (e) { console.log('Notion sync error:', e); }
+    } catch (e) { console.log('Make webhook error:', e); }
   }
 
   function renderInbox() {
@@ -1130,54 +1128,54 @@
     const end = params.get('end');
     const arrival = params.get('arrival');
 
-    if (!start || !end) return;
+    if (!end || end.trim() === '') return;
 
-    // Parse start data — format is "| address | departure time"
-    const parts = start.split('|').map(p => p.trim()).filter(Boolean);
-    const startAddress = parts[0] || 'Unknown';
-    const departureTime = parts[1] || '';
+    const startAddress = start ? start.trim() : 'Unknown Start';
+    const endAddress = end.trim();
+    const arrivalTime = arrival ? arrival.trim() : '';
 
-    // Check if this trip already exists (avoid duplicates)
+    // Check for duplicates based on end address and time
     const isDuplicate = trips.some(t =>
-      t.startAddress === startAddress &&
-      t.arrivalTime === arrival
+      t.endAddress === endAddress &&
+      Math.abs(new Date(t.date) - new Date()) < 300000
     );
 
-    if (isDuplicate) return;
+    if (isDuplicate) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
 
     const newTrip = {
       id: Date.now(),
       date: new Date().toISOString(),
       startAddress: startAddress,
-      endAddress: end,
-      departureTime: departureTime,
-      arrivalTime: arrival || '',
+      endAddress: endAddress,
+      departureTime: '',
+      arrivalTime: arrivalTime,
       km: null,
       status: 'unreviewed',
       type: null
     };
 
-    // Check if end address matches a student with auto-business on
-    const student = matchStudent(end);
+    const student = matchStudent(endAddress);
     if (student && student.autoBusiness) {
       newTrip.status = 'reviewed';
       newTrip.type = 'business';
       trips.unshift(newTrip);
       saveTrips();
-      // Calculate km and sync to Notion in background
-      calculateKm(startAddress, end).then(km => {
+      calculateKm(startAddress, endAddress).then(km => {
         newTrip.km = km;
         saveTrips();
         syncToNotion(newTrip, 'business');
       });
-      toast(`Auto-logged as Business — ${student.name} ✓`);
     } else {
       trips.unshift(newTrip);
       saveTrips();
     }
 
-    // Clear URL params without reloading
     window.history.replaceState({}, document.title, window.location.pathname);
+    renderInbox();
+    updateBadge();
   }
 
   checkUrlParams();
