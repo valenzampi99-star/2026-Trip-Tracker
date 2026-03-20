@@ -782,7 +782,7 @@
     badge.classList.toggle('hidden', count === 0);
   }
 
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyB6XGnR9mcrAwrzzeSfZPDqufOCJxg6vo4';
+  const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
 
   // Load Google Maps JavaScript API dynamically
   function loadGoogleMapsAPI() {
@@ -1074,6 +1074,7 @@
     if (!trip) return;
     trip.status = 'unreviewed';
     trip.type = null;
+    trip.km = null;
     saveTrips();
     renderLog();
     updateBadge();
@@ -1111,9 +1112,12 @@
   function saveEdit() {
     const trip = trips.find(t => t.id === editingId);
     if (!trip) return;
-    trip.startAddress = document.getElementById('modal-start').value.trim() || trip.startAddress;
-    trip.endAddress = document.getElementById('modal-end').value.trim() || trip.endAddress;
-    trip.km = parseFloat(document.getElementById('modal-km').value) || trip.km;
+    const newStart = document.getElementById('modal-start').value.trim();
+    const newEnd = document.getElementById('modal-end').value.trim();
+    const newKm = document.getElementById('modal-km').value;
+    if (newStart) trip.startAddress = newStart;
+    if (newEnd) trip.endAddress = newEnd;
+    trip.km = newKm === '' ? null : parseFloat(newKm);
     trip.type = editingType;
     saveTrips();
     document.getElementById('edit-modal').classList.remove('open');
